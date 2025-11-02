@@ -1,0 +1,59 @@
+name: Combine Repositories
+description: >
+  Checks out multiple repositories and merges all files into a single merge directory, overwriting existing files with later
+  repository checkouts in the list. Once merged, they are no longer git repositories.
+inputs:
+  repositories:
+    type: string
+    description: >
+      List of repositories in the format of `{owner}/{repo}:{refspec} {merge_path}`. The contents of the {merge_path} for
+      each Repository gets merged in the order they appear in the list, with each later repostitory overwriting any 
+      matching files from an earlier repository checkout. Begin with the heredoc ignore indent '|-' to list multipe repositories.
+      ```
+      repositories: |-
+        {owner}/{first_repo}:{optional_ref} {merge_path}
+        {owner}/{second_repo}:{optional_ref} {merge_path}
+      ```
+    required: true
+  merge-directory:
+    type: string
+    description: Directory in which merge all repositories in to. Defaults to _merged_repos.
+    required: false
+    default: '_merged_repos'
+  github-url:
+    type: string
+    description: 'The base url to use to pull repositories. example: https://github.com/. Defaults to https://github.com/.'
+    required: false
+    default: https://github.com/
+  token:
+    type: string
+    description: > 
+      Personal access token (PAT) with access to clone all respositores in the `repositories` list. Defaults to `github.token`.
+    required: false
+    default: ${{ github.token }}
+outputs:
+  merge-directory:
+    description: Relative path to the directory repositories were merged into.
+    value: ${{ steps.parse-inputs.outputs.merge-directory }}
+runs:
+  using: "composite"
+  steps:
+    - name: Validate and Parse Inputs
+      id: parse-inputs
+      env:
+        MERGE_REPOSITORIES: ${{ inputs.repositories }}
+        MERGE_DIRECTORY: ${{ inputs.merge-directory }}
+        GITHUB_URL: ${{ inputs.github-url }}
+      shell: bash
+      run: $GITHUB_ACTION_PATH/parse_inputs.sh
+      
+    - name: Checkout Repositories
+      id: init
+      env:
+        MERGE_DIRECTORY: ${{ steps.parse-inputs.outputs.merge-directory }}
+        REPOSITORIES_JSON: ${{ steps.parse-inputs.outputs.repositories-json }}
+        GH_PROTOCOL: ${{ steps.parse-inputs.outputs.gh-protocol }}
+        GH_HOSTNAME: ${{ steps.parse-inputs.outputs.gh-hostname }}
+        GH_TOKEN: ${{ inputs.token }}
+      shell: bash
+      run: $GITHUB_ACTION_PATH/checkout_repos.sh

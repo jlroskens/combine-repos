@@ -1,0 +1,20 @@
+name: 𝌚 Publish GitHub Release
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '.github/workflows/release.yml'
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: write
+  actions: read
+jobs:
+  create-release:
+    name: Create Release
+    uses: jlroskens/ci-workflows/.github/workflows/release.yml@v1
+    with:
+      release-branch: main
