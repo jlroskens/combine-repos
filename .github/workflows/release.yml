@@ -15,6 +15,6 @@ permissions:
 jobs:
   create-release:
     name: Create Release
-    uses: jlroskens/ci-workflows/.github/workflows/release.yml@v1
+    uses: rNimbus-com/ci-workflows/.github/workflows/release.yml@v1
     with:
       release-branch: main
